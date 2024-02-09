@@ -52,6 +52,7 @@ public class ServerDelegate extends Thread {
                         break;
                     case -5:
                         robot.mouseMove(scanner.nextInt(), scanner.nextInt());
+                        
                         break;
                 }
             }

@@ -4,8 +4,13 @@
  */
 package MyServer;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 import javax.swing.UIManager;
 
 /**
@@ -17,6 +22,8 @@ public class StartServer extends javax.swing.JFrame {
     /**
      * Creates new form StartServer
      */
+    Socket chatSocket = null;
+
     public StartServer() {
         initComponents();
     }
@@ -31,11 +38,12 @@ public class StartServer extends javax.swing.JFrame {
     private void initComponents() {
 
         jScreen = new javax.swing.JLabel();
-        jListMessage = new javax.swing.JLabel();
         jMessage = new javax.swing.JTextField();
         jSend = new javax.swing.JButton();
         jOpenPort = new javax.swing.JButton();
         jPort = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jListMessage = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -54,13 +62,20 @@ public class StartServer extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jScreen.setBackground(new java.awt.Color(255, 255, 204));
-        jScreen.setText("connectting");
+        jScreen.setFont(new java.awt.Font("Segoe UI", 1, 48)); // NOI18N
+        jScreen.setForeground(new java.awt.Color(0, 102, 102));
+        jScreen.setText("          WAITTING FOR CONNECT");
+        jScreen.setToolTipText("");
         jScreen.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 204)));
-
-        jListMessage.setBackground(new java.awt.Color(255, 255, 255));
-        jListMessage.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 204)));
+        jScreen.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jScreen.setOpaque(true);
 
         jSend.setText("Send");
+        jSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jSendActionPerformed(evt);
+            }
+        });
 
         jOpenPort.setText("Open port");
         jOpenPort.addActionListener(new java.awt.event.ActionListener() {
@@ -68,6 +83,12 @@ public class StartServer extends javax.swing.JFrame {
                 jOpenPortActionPerformed(evt);
             }
         });
+
+        jListMessage.setBackground(new java.awt.Color(255, 255, 255));
+        jListMessage.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        jListMessage.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 204)));
+        jListMessage.setOpaque(true);
+        jScrollPane1.setViewportView(jListMessage);
 
         fileMenu.setMnemonic('f');
         fileMenu.setText("File");
@@ -138,17 +159,17 @@ public class StartServer extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jScreen, javax.swing.GroupLayout.PREFERRED_SIZE, 1124, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jListMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jMessage)
                             .addComponent(jPort, javax.swing.GroupLayout.DEFAULT_SIZE, 207, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jOpenPort, javax.swing.GroupLayout.DEFAULT_SIZE, 110, Short.MAX_VALUE)
-                            .addComponent(jSend, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(jOpenPort, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
+                            .addComponent(jSend, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jScrollPane1))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -157,7 +178,7 @@ public class StartServer extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jListMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -167,7 +188,7 @@ public class StartServer extends javax.swing.JFrame {
                             .addComponent(jOpenPort, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addContainerGap(67, Short.MAX_VALUE))
-                    .addComponent(jScreen, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jScreen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
         pack();
@@ -179,23 +200,94 @@ public class StartServer extends javax.swing.JFrame {
 
     private void jOpenPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jOpenPortActionPerformed
         // TODO add your handling code here:
+        String text = "<html></html>";
+        jListMessage.setText(text);
         int port = Integer.parseInt(jPort.getText());
+        int chatPort = port + 1;
         System.out.println("Server open: " + port);
         new Thread(() -> {
             try {
+                // controller
                 ServerSocket sc = new ServerSocket(port);
                 while (true) {
                     Socket client = sc.accept();
+
                     System.out.println("New client Connected to the server");
                     //Per each client create a ClientHandler
                     new ClientHandler(client, jScreen);
+//                    chatServer(client);
 
+                }
+
+            } catch (Exception e) {
+            }
+        }).start();
+        new Thread(() -> {
+            // chat
+            try {
+                ServerSocket scChat = new ServerSocket(chatPort);
+                while (true) {
+                    Socket client = scChat.accept();
+                    chatSocket = client;
+                    System.out.println("Chat connect");
+
+                    BufferedReader read = new BufferedReader(
+                            new InputStreamReader(client.getInputStream()));
+                    while (true) {
+                        String message;
+                        if ((message = read.readLine()) != null) {
+                            String listMessage = jListMessage.getText();
+                            int index = listMessage.indexOf("</html>");
+                            String addMessage = "<br>Client: " + message;
+                            String finalString = insertString(listMessage, addMessage, index);
+                            jListMessage.setText(finalString);
+//                            String listMessage = 
+                        }
+
+//                        System.out.print("Server: ");
+//                        message = sc.nextLine();
+//                        write.println(message);
+//                        write.flush();
+                    }
                 }
             } catch (Exception e) {
             }
         }).start();
 
+
     }//GEN-LAST:event_jOpenPortActionPerformed
+
+    private void jSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jSendActionPerformed
+        // TODO add your handling code here:
+        try {
+            PrintWriter write = new PrintWriter(chatSocket.getOutputStream());
+            String message = jMessage.getText();
+            String listMessage = jListMessage.getText();
+            int index = listMessage.indexOf("</html>");
+            String addMessage = "<br>Server: " + message;
+            String finalString = insertString(listMessage, addMessage, index);
+            jListMessage.setText(finalString);
+            write.println(message);
+            write.flush();
+            jMessage.setText("");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }//GEN-LAST:event_jSendActionPerformed
+    public static String insertString(
+            String originalString,
+            String stringToBeInserted,
+            int index) {
+
+        // Create a new string 
+        String newString = originalString.substring(0, index)
+                + stringToBeInserted
+                + originalString.substring(index);
+
+        // return the modified String 
+        return newString;
+    }
 
     /**
      * @param args the command line arguments
@@ -249,6 +341,7 @@ public class StartServer extends javax.swing.JFrame {
     private javax.swing.JButton jOpenPort;
     private javax.swing.JTextField jPort;
     private javax.swing.JLabel jScreen;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton jSend;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem openMenuItem;

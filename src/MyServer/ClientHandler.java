@@ -5,6 +5,7 @@
 package MyServer;
 
 import java.awt.Rectangle;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
@@ -38,6 +39,10 @@ public class ClientHandler extends Thread {
             System.out.println(clientScreenDim.toString());
             new ClientScreenReciever(ois, lable);
             new ClientCommandsSender(cSocket, lable, clientScreenDim);
+//             DataInputStream dIn = new DataInputStream(cSocket.getInputStream());
+
+//            String  message = dIn.readUTF();
+//            System.out.println("Client handle read message: " + message);
 
         } catch (IOException ex) {
             ex.printStackTrace();
